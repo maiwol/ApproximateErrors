@@ -2,7 +2,7 @@ Exact Simulator
 ===============
 
 ## Synopsis
-Exact full-density-matrix simulator of quantum circuits.  
+Python-based exact full-density-matrix simulator of quantum circuits.  
 So far, we have the Steane code with Shor's ancillae (stabilizer measurements).  We're working towards adding the Steane ancillae method and the Bacon-Shor code.
 
 ## Code Example
