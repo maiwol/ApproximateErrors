@@ -1,5 +1,6 @@
 import numpy as np
-import X_errors_2 as X
+import circuit as c
+import X_Errors_2 as X
 import Hadamard_Gates as H
 import Z_Errors as Z
 import CNOT_Circuit_Final as CNOT
@@ -18,7 +19,7 @@ class Efficient_State_and_Operations(object):
 		prep_gates, oper_gates, meas_gates = self.classify_gates(
 									circuit.gates) 
 		self.number_qubits = number_qubits
-		self.operation = self.prep_operations
+##		self.operation = self.prep_operations
 		self.number_ancilla_qubits = len(circuit.ancilla_qubits())
 		number_data_qubits = self.number_qubits - self.number_ancilla_qubits
 		self.number_data_qubits = number_data_qubits 
@@ -43,7 +44,7 @@ class Efficient_State_and_Operations(object):
 		"""
 		"""
 		
-		if gate.qubits[0].qubit_type == 'ancilla'
+		if gate.qubits[0].qubit_type == 'ancilla':
 			Qubit_ID = 1 + number_data_qubits + gate.qubits[0].qubit_id
 		else:
 			Qubit_ID = 1 + gate.qubits[0].qubit_id
@@ -58,21 +59,21 @@ class Efficient_State_and_Operations(object):
 									Qubit_ID))
 			elif gate == 'Z':
 				current_gate = np.matrix(Z.Z_Circuit(number_qubits, Qubit_ID))
-			elif gate = 'CX':
-				if gates.qubits[0].qubit_type == 'ancilla'
+			elif gate == 'CX':
+				if gates.qubits[0].qubit_type == 'ancilla':
 					control = 1 + number_data_qubits + gate.qubits[0].qubit_id
 					target = 1 + gate.qubits[1].qubit_id
-				else
+				else:
 					control = 1 + gate.qubits[0].qubit_id
 					target = 1 + number_data_qubits + gate.qubits[1].qubit_id
 				
 				current_gate = np.matrix(CNOT.CNOT_Circuit(number_qubits,
 									control, target))
 			elif gate == 'CZ':
-				if gates.qubits[0].qubit_type == 'ancilla'
+				if gates.qubits[0].qubit_type == 'ancilla':
 					control = 1 + number_data_qubits + gate.qubits[0].qubit_id
 					target = 1 + gate.qubits[1].qubit_id
-				else
+				else:
 					control = 1 + gate.qubits[0].qubit_id
 					target = 1 + number_data_qubits + gate.qubits[1].qubit_id
 				
@@ -86,7 +87,7 @@ class Efficient_State_and_Operations(object):
 				current_gate = sim.tensor_product_two_qubit_gate(
 									gate)
 			else:
-				raise NameError('Only 1- and 2-qubit gates 
+				raise NameError('Only 1- and 2-qubit gates '\
 						'currently implemented')
 	def apply_single_operation(self, current_state, operation):
 
@@ -97,7 +98,7 @@ class Efficient_State_and_Operations(object):
 
 	def apply_all_operations(self):
 		current_state = self.initial_state
-		for gate in classify_gates.operation_gates
+		for gate in classify_gates.operation_gates:
 			self.translate_gate(self, gate)
 			self.apply_single_operation(self, current_state, current_gate)
 			return current_state
@@ -106,3 +107,10 @@ class Efficient_State_and_Operations(object):
 		## 1) Translate into matrix
 		## 2) apply_single_operation
 		## 3) erase operation
+gates = [c.Gate(gate_name = 'CX', qubits = [c.Qubit(qubit_id=0, qubit_type = 'data', level=0), \
+	c.Qubit(qubit_id=1, qubit_type = 'data', level = 0)])]
+circ1 = c.Circuit(gates, 'None', 'None')
+zero_zero = np.matrix([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,1]]) 
+print zero_zero
+CX_Circ = Efficient_State_and_Operations(circ1, 2)
+
