@@ -7,6 +7,7 @@ import CNOT_Circuit_Final as CNOT
 import CZ_Circuit as CZ
 import functions as fun
 import Simulation_real_circuits as sim
+import sympy as sp
 
 
 class Efficient_State_and_Operations(object):
@@ -23,6 +24,8 @@ class Efficient_State_and_Operations(object):
 		self.number_qubits = number_qubits
 		self.number_ancilla_qubits = len(circuit.ancilla_qubits())
 		self.number_data_qubits = self.number_qubits - self.number_ancilla_qubits
+		self.rot_errors = rot_errors
+		self.sym = sym
 
 		# This next "if" allows us to postpone the specification of 
 		# an initial state until later on.  This is used to reduce 
@@ -109,6 +112,394 @@ class Efficient_State_and_Operations(object):
 
 	################################################################################
 	### Methods copied exactly from Simulatio_real_circuits.State_and_Operations ###
+	def translate_one_qubit_gate(self, gate_name):
+		"""
+		input: gate
+		output: list of Kraus operators
+		"""
+		split_gate = gate_name.split(' ')
+		if len(split_gate) == 1:
+			if self.sym:
+				return [fun.gate_matrix_dic_sym[split_gate[0]]]
+			else:
+				return [fun.gate_matrix_dic[split_gate[0]]]	
+
+		elif len(split_gate) > 1:
+			if split_gate[0] == 'Pauli':
+				if self.sym:
+					pass
+				else:
+					px = float(split_gate[1])
+					py = float(split_gate[2])
+					pz = float(split_gate[3])
+				return fun.Pauli(px,py,pz, self.sym)
+    
+            		elif split_gate[0] == 'DC_1q':
+                		if self.sym:
+                    			pass
+                		else:
+                    			p = float(split_gate[1])
+                		return fun.DC_1q(p, self.sym)
+            
+			elif split_gate[0] == 'DC_2q':
+                		''' 
+                		Not really a 1-qubit gate, 
+                		but that's fine for now.
+                		'''
+                		if self.sym:
+                    			pass
+                		else:
+                    			p = float(split_gate[1])
+                		return fun.DC_2q(p, self.sym)
+
+			elif split_gate[0] == 'CX_ion_trap':
+				'''
+				error after CX in ion trap
+				'''
+				if self.sym:
+					pass
+				else:
+					p = float(split_gate[1])
+				return fun.CX_ion_trap(p, self.sym)				
+ 
+            		elif split_gate[0] == 'bit_flip':
+                		if self.sym:
+                    			pass
+                		else:
+                    			p = float(split_gate[1])
+                		return fun.bit_flip(p, self.sym)
+
+			elif split_gate[0] == 'AD':
+				if self.sym:
+					gamma = sp.Symbol(split_gate[1], 
+							  positive=True)
+				else:
+					gamma = float(split_gate[1])
+				return fun.AD(gamma, self.sym)		
+
+			elif split_gate[0] == 'CMCapproxAD_cons':
+				if self.sym:
+					pm = sp.Symbol(split_gate[1], 
+						       positive=True)
+				else:
+					pm = float(split_gate[1])
+				return fun.CMCapproxAD_cons(pm, self.sym)
+
+			elif split_gate[0] == 'CMCapproxAD_uncons':
+				if self.sym:
+					gamma = sp.Symbol(split_gate[1], 
+							  positive=True)
+				else:
+					gamma = float(split_gate[1])
+				return fun.CMCapproxAD_uncons(gamma, self.sym)
+			
+			elif split_gate[0] == 'PCapproxAD_cons':
+				if self.sym:
+					#px = sp.Symbol(split_gate[1], 
+					#		positive=True)
+					#py = sp.Symbol(split_gate[2], 
+					#		positive=True)
+					#pz = sp.Symbol(split_gate[3], 
+					#		positive=True)
+					gamma = sp.Symbol(split_gate[1], 
+							  positive=True)
+				else:	
+					#px = float(split_gate[1])
+					#py = float(split_gate[2])
+					#pz = float(split_gate[3])
+					gamma = float(split_gate[1])
+				#return fun.PCapproxAD_cons(px,py,pz, self.sym)
+				return fun.PCapproxAD_cons(gamma, self.sym)
+
+			elif split_gate[0] == 'PCapproxAD_uncons':
+				if self.sym:
+					gamma = sp.Symbol(split_gate[1], 
+							  positive=True)
+				else:
+					gamma = float(split_gate[1])
+				return fun.PCapproxAD_uncons(gamma, self.sym)
+
+			elif split_gate[0] == 'PauliapproxAD_uncons':
+				if self.sym:
+					pass
+				else:
+					gamma = float(split_gate[1])
+				return fun.PauliapproxAD_uncons(gamma, False)
+
+
+			elif split_gate[0] == 'PolXY':
+				if self.sym:
+					pass
+				else:
+					p = float(split_gate[1])
+					phi = float(split_gate[2])
+				return fun.PolXY(p, phi, self.sym)
+
+			elif split_gate[0] == 'CMCapproxPolXY_cons':
+				if self.sym:
+					pass
+				else:
+					p = float(split_gate[1])
+					phi = float(split_gate[2])
+				return fun.CMCapproxPolXY_cons(p, phi, 
+								self.sym)
+
+			elif split_gate[0] == 'CMCapproxPolXY_uncons':
+				if self.sym:
+					pass
+				else:
+					p = float(split_gate[1])
+					phi = float(split_gate[2])
+				return fun.CMCapproxPolXY_uncons(p, phi, 
+								self.sym)
+
+			elif split_gate[0] == 'PCapproxPolXY_cons':
+				if self.sym:
+					pass
+				else:
+					p = float(split_gate[1])
+					phi = float(split_gate[2])
+				return fun.PCapproxPolXY_cons(p, phi, 
+								self.sym)
+
+			elif split_gate[0] == 'PCapproxPolXY_uncons':
+				if self.sym:
+					pass
+				else:
+					p = float(split_gate[1])
+					phi = float(split_gate[2])
+				return fun.PCapproxPolXY_uncons(p, phi, 
+								self.sym)
+			
+			elif split_gate[0] == 'PauliapproxPolXY_uncons':
+				if self.sym:
+					pass
+				else:
+					gamma = float(split_gate[1])
+			
+				return fun.PauliapproxPolXY_uncons(gamma, False)
+
+			elif split_gate[0] == 'RZC':
+				if self.sym:
+					pass
+				else:
+					theta = float(split_gate[1])
+				return fun.RZC(theta, self.sym)
+
+			elif split_gate[0] == 'PCapproxRZ_uncons':
+				if self.sym:
+					pass
+				else:
+					theta = float(split_gate[1])
+				return fun.PCapproxRZ_uncons(theta, self.sym)
+		
+			elif split_gate[0] == 'PCapproxRZ_cons':
+				if self.sym:
+					pass
+				else:
+					theta = float(split_gate[1])
+				return fun.PCapproxRZ_cons(theta, self.sym)
+			
+			elif split_gate[0] == 'PCapproxRZ_geom_mean':
+				if self.sym:
+					pass
+				else:
+					theta = float(split_gate[1])
+				return fun.PCapproxRZ_geom_mean(theta, self.sym)
+			
+			elif split_gate[0] == 'CMCapproxRZ_uncons':
+				if self.sym:
+					pass
+				else:
+					theta = float(split_gate[1])
+				return fun.CMCapproxRZ_uncons(theta, self.sym)
+
+			elif split_gate[0] == 'CMCapproxRZ_cons':
+				if self.sym:
+					pass
+				else:
+					theta = float(split_gate[1])
+				return fun.CMCapproxRZ_cons(theta, self.sym)
+
+			elif split_gate[0] == 'PauliapproxRZ_uncons':
+				if self.sym:
+					pass
+				else:
+					theta = float(split_gate[1])
+				return fun.PauliapproxRZ_uncons(theta, self.sym)	
+
+			elif split_gate[0] == 'RHC':
+				if self.sym:
+					pass
+				else:
+					theta = float(split_gate[1])
+				return fun.RHC(theta, self.sym)
+				
+			elif split_gate[0] == 'PCapproxRH_uncons':
+			    if self.sym:
+			        pass
+			    else:
+			        theta = float(split_gate[1])
+			    return fun.PCapproxRH_uncons(theta, self.sym)
+			    
+			elif split_gate[0] == 'PCapproxRH_cons':
+			    if self.sym:
+			        pass
+			    else:
+			        theta = float(split_gate[1])
+			    return fun.PCapproxRH_cons(theta, self.sym)
+			
+			elif split_gate[0] == 'PCapproxRH_geom_mean':
+				if self.sym:
+					pass
+				else:
+					theta = float(split_gate[1])
+				return fun.PCapproxRH_geom_mean(theta, self.sym)
+			    
+			elif split_gate[0] == 'CMCapproxRH_uncons':
+			    if self.sym:
+			        pass
+			    else:
+			        theta = float(split_gate[1])
+			    return fun.CMCapproxRH_uncons(theta, self.sym)
+			    
+			elif split_gate[0] == 'CMCapproxRH_cons':
+			    if self.sym:
+			        pass
+			    else:
+			        theta = float(split_gate[1])
+			    return fun.CMCapproxRH_cons(theta, self.sym)
+			    
+			elif split_gate[0] == 'PauliapproxRH_uncons':
+			    if self.sym:
+			        pass
+			    else:
+			        theta = float(split_gate[1])
+			    return fun.PauliapproxRH_uncons(theta, self.sym)
+			
+                        elif split_gate[0] == 'RTC':
+			    if self.sym:
+			        pass
+			    else:
+			        theta = float(split_gate[1])
+			    return fun.RTC(theta, self.sym)
+
+            		#else:
+			#	if self.sym:
+			#		pass
+			#	else:
+			#		channel = split_gate[0]
+			#		theta = float(split_gate[1])
+			#		cutoff = 1.e-8
+			#	
+			#	return fun.read_operation_from_json(channel, theta, 
+			#					    self.sym, cutoff)
+	
+			#else:
+			#	raise NameError('This gate is not currently implemented.')
+
+
+
+
+	def tensor_product_one_qubit_gate(self, gate):
+		"""
+		"""
+		gate_name = gate.gate_name
+		if gate.qubits[0].qubit_type == 'ancilla':
+			qubit = gate.qubits[0].qubit_id + self.number_data_qubits
+		else:
+			qubit = gate.qubits[0].qubit_id
+
+		if gate_name == 'dens':
+			gate_operators = [gate.dens]
+		else:
+			gate_operators = self.translate_one_qubit_gate(gate_name)
+	
+		if self.rot_errors != None:
+			gate_operators=[(self.rot_errors*oper)*(self.rot_errors.H)
+					   for oper in gate_operators]
+	
+		if self.number_qubits == 1:
+			return gate_operators 
+		else:
+			if self.sym:
+				identity_list = [fun.gate_matrix_dic_sym['I'] 
+					for i in range(self.number_qubits)]
+			else:
+				identity_list = [fun.gate_matrix_dic['I'] 
+					for i in range(self.number_qubits)]
+			tensored_gate_list = []
+			for operator in gate_operators:
+				gate_list = identity_list[:]
+				gate_list[qubit] = operator
+				tensored_gate_list += [fun.tensor_product(
+							gate_list, self.sym)]
+			return tensored_gate_list
+	
+
+
+	def tensor_product_two_qubit_gate(self, gate):
+		"""
+		"""
+		gate_name = gate.gate_name
+		qubits = [0, 0]
+		for i in range(len(gate.qubits)):
+			if gate.qubits[i].qubit_type == 'ancilla':
+				qubits[i] = gate.qubits[i].qubit_id + self.number_data_qubits
+			else:
+				qubits[i] = gate.qubits[i].qubit_id
+
+
+		if gate_name[0] == 'C' and gate_name[:11] != 'CX_ion_trap':
+			if len(gate_name) == 1:
+				target_gate = gate.dens
+			else:
+				target_gate = gate_name[1:]
+			if target_gate == 'NOT':
+				target_gate = 'X'
+			c = qubits[0]
+			t = qubits[1]
+
+			if self.sym:
+				list_I = [fun.gate_matrix_dic_sym['I'] 
+					  for i in range(self.number_qubits)]
+				list_T = [fun.gate_matrix_dic_sym['I'] 
+					  for i in range(self.number_qubits)]
+				list_I[c] = mat.Matrix([[1,0],[0,0]])
+				list_T[c] = mat.Matrix([[0,0],[0,1]])
+				if type(target_gate) == str:
+					list_T[t] = gate_matrix_dic_sym[
+								target_gate]
+				else:
+					list_T[t] = target_gate
+			
+			else:
+				list_I = [fun.gate_matrix_dic['I'] 
+					  for i in range(self.number_qubits)]
+				list_T = [fun.gate_matrix_dic['I'] 
+					  for i in range(self.number_qubits)]
+				list_I[c] = np.matrix([[1.,0.],[0.,0.]])
+				list_T[c] = np.matrix([[0.,0.],[0.,1.]])
+				if type(target_gate) == str:
+					list_T[t] = fun.gate_matrix_dic[target_gate]
+				else:
+					list_T[t] = target_gate
+			tensored_gate = fun.tensor_product(list_I, self.sym) + fun.tensor_product(list_T, self.sym)
+			return [tensored_gate] 
+
+		else:
+			'''for now only the 2-qubit DC and the CX_ion_trap'''
+			identity_list = [fun.gate_matrix_dic['I'] 
+			          	  for i in range(self.number_qubits)]
+			tensored_gate_list = []
+			gate_operators = self.translate_one_qubit_gate(gate_name) 
+			for operator in gate_operators:
+				gate_list = identity_list[:]
+				gate_list[qubits[0]] = operator[0]
+                		gate_list[qubits[1]] = operator[1]
+				tensored_gate_list += [fun.tensor_product(
+							gate_list, self.sym)]
+			return tensored_gate_list
 
 	
 
