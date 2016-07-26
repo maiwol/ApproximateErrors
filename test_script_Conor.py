@@ -18,7 +18,7 @@ alternating = True    # not important
 with_initial_I = True    # whether or not we want Identity
                          # gates at the beginning 
 error_gate = 'AD 0.1'    # what error we want to add
-faulty_gates = ['I','H','CX','CZ']   # what gates we'll add
+faulty_gates = ['PrepareX', 'PrepareZ', 'I','H','CX','CZ']   # what gates we'll add
                                      # the error to
 error_kind = 3   # kind of error: play with this (1, 2, or 3)
 
@@ -36,9 +36,9 @@ error_kind = 3   # kind of error: play with this (1, 2, or 3)
 ### Circuit 2: FT prep of a logical |0>.
 
 circ2, meas_gates =  cor.Steane_Correct.FT_encoded_zero_Steane()
-#fun.insert_errors(circ2, error_gate, faulty_gates, error_kind)
-#brow.from_circuit(circ2, True)
-#sys.exit(0)
+fun.insert_errors(circ2, error_gate, faulty_gates, error_kind)
+brow.from_circuit(circ2, True)
+sys.exit(0)
 circ2_sim = eff.Efficient_State_and_Operations(circ2, 14)
 #print len(circ2_sim.current_state.density_matrix)
 circ2_sim.apply_all_operations()

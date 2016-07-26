@@ -16,7 +16,8 @@ class Efficient_State_and_Operations(object):
 	## 3. Prep initial_state
 	
 	def __init__(self, circuit, number_qubits,
-	             initial_state=None, desired_outcomes = [None]):
+	             initial_state=None, desired_outcomes = [None],
+		     precompiled_gates=False, precompiled_errors=False):
 		print number_qubits
 		classified_gates = self.classify_gates(circuit.gates)
 		self.prep_gates, self.oper_gates, self.meas_gates = classified_gates 
@@ -24,8 +25,14 @@ class Efficient_State_and_Operations(object):
 		self.number_qubits = number_qubits
 		self.number_ancilla_qubits = len(circuit.ancilla_qubits())
 		self.number_data_qubits = self.number_qubits - self.number_ancilla_qubits
-		self.rot_errors = rot_errors
-		self.sym = sym
+		self.rot_errors = None
+		self.sym = False
+		if precompiled_gates == False:
+			pass
+			# compile every gate and save it on hard drive
+		if precompiled_errors == False:
+			pass
+			# compile every error and save it on hard drive
 
 		# This next "if" allows us to postpone the specification of 
 		# an initial state until later on.  This is used to reduce 
@@ -98,10 +105,10 @@ class Efficient_State_and_Operations(object):
 									control, target))			
 		else:
 			if len(gate.qubits) == 1:
-				current_gate = sim.State_and_Operations.tensor_product_one_qubit_gate(
+				current_gate = self.tensor_product_one_qubit_gate(
 									gate)
 			elif len(gate.qubits) == 2:
-				current_gate = sim.State_and_Operations.tensor_product_two_qubit_gate(
+				current_gate = self.tensor_product_two_qubit_gate(
 									gate)
 			else:
 				raise NameError('Only 1- and 2-qubit gates '\
@@ -484,6 +491,7 @@ class Efficient_State_and_Operations(object):
 					list_T[t] = fun.gate_matrix_dic[target_gate]
 				else:
 					list_T[t] = target_gate
+			print 'About to start tensoring ...'
 			tensored_gate = fun.tensor_product(list_I, self.sym) + fun.tensor_product(list_T, self.sym)
 			return [tensored_gate] 
 
@@ -509,18 +517,22 @@ class Efficient_State_and_Operations(object):
 
 
 
-	def apply_single_operation(self, current_state, operation):
-
-		trans_list = [(oper*self.current_state) \
+	def apply_single_operation(self, dens_matrix, operation):
+		trans_list = [(oper*dens_matrix) \
 			     *(oper.H) for oper in operation]
-		current_state = sum(trans_list)
+		
+        	return sum(trans_list)
 
 
 	def apply_all_operations(self):
 		for gate in self.oper_gates:
 			print 'Translating gate %s ...' %gate.gate_name
 			current_oper = self.translate_gate(gate)
-			self.current_state = self.apply_single_operation(self.current_state, current_oper)
+			print 'Done translating'
+			print 'About to start applying operation ...'
+			self.current_state.density_matrix = self.apply_single_operation(
+                                                self.current_state.density_matrix,
+                                                current_oper)
 			
 
 		## 1) Translate into matrix
