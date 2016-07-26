@@ -122,7 +122,7 @@ w=3
 c=1
 t=2
 
-CZ_Circuit(w,c,t)
+#CZ_Circuit(w,c,t)
 		
 
 

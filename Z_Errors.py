@@ -15,7 +15,7 @@ def Z_Circuit(w, z):
 		circ_mat[i][i] = 1
 		circ_mat[j][j] = -1	
 	if w==z:
-		print circ_mat
+		return circ_mat
 	else:
 		for c in range(2**(z)):
 			for d in range(2**(z)):	
@@ -23,11 +23,11 @@ def Z_Circuit(w, z):
 					if circ_mat[d][c] == 1 or \
 					circ_mat[d][c] == -1:
 						circ_mat2[2*d+a][2*c+a] = circ_mat[d][c]
-		print circ_mat2
-w=3
-z=2
+		#print circ_mat2
+#w=3
+#z=2
 
-Z_Error_Circuit(w,z);
+#Z_Circuit(w,z);
 
 
 ##Defining identity

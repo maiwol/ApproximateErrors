@@ -27,9 +27,9 @@ def Hada_Circuit(w, h):
 					circ_mat[d][c] == -(1/np.sqrt(2)):
 						circ_mat2[2*d+a][2*c+a] = circ_mat[d][c]
 		print circ_mat2
-w=2
-h=1
-Hada_Circuit(w,h);
+#w=2
+#h=1
+#Hada_Circuit(w,h);
 
 
 ##Defining identity

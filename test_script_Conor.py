@@ -3,6 +3,7 @@ import functions as fun
 import Script2 as scr
 import faultTolerant.steane as st
 import scriptsIARPA.correction as cor
+import Efficient_State_and_Operation as eff
 from visualizer import browser_vis as brow
 
 
@@ -26,8 +27,8 @@ error_kind = 3   # kind of error: play with this (1, 2, or 3)
 
 ### Circuit 1: X stabilizer of the Steane code repeated 3 times.
 
-circ1 = scr.create_FT_EC_no_time(n_data, n_ancilla, X_stabs, redundancy,
-                                alternating, with_initial_I)
+#circ1 = scr.create_FT_EC_no_time(n_data, n_ancilla, X_stabs, redundancy,
+#                                alternating, with_initial_I)
 #fun.insert_errors(circ1, error_gate, faulty_gates, error_kind)
 #brow.from_circuit(circ1, True)
 
@@ -35,5 +36,9 @@ circ1 = scr.create_FT_EC_no_time(n_data, n_ancilla, X_stabs, redundancy,
 ### Circuit 2: FT prep of a logical |0>.
 
 circ2, meas_gates =  cor.Steane_Correct.FT_encoded_zero_Steane()
-fun.insert_errors(circ2, error_gate, faulty_gates, error_kind)
-brow.from_circuit(circ2, True)
+#fun.insert_errors(circ2, error_gate, faulty_gates, error_kind)
+#brow.from_circuit(circ2, True)
+#sys.exit(0)
+circ2_sim = eff.Efficient_State_and_Operations(circ2, 14)
+#print len(circ2_sim.current_state.density_matrix)
+circ2_sim.apply_all_operations()

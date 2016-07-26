@@ -113,11 +113,11 @@ def CNOT_Circuit(w,c,t):
 		return circ_mat02
 		print w1.adding_arrays(w, circ_mat4, circ_mat02)	
 
-w=2
-c=1
-t=2
+#w=2
+#c=1
+#t=2
 
-CNOT_Circuit(w,c,t)
+#CNOT_Circuit(w,c,t)
 		
 		
 
