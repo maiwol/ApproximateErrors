@@ -1,4 +1,5 @@
 import Where_1s as w1
+import numpy as np
 
 def CNOT_Circuit(w,c,t):
 ## WIRES START AT 1:
@@ -51,7 +52,7 @@ def CNOT_Circuit(w,c,t):
 				i = (2**(w-c))*(2*a) + b
 				circ_mat02[i][i] = 1
 #		print circ_mat02
-		print w1.adding_arrays(w, circ_mat4, circ_mat02)
+		return np.matrix(w1.adding_arrays(w, circ_mat4, circ_mat02))
 
 	else:
 		circ_mat = [[0 for a in range(2**t)] for b in range(2**t)]
@@ -64,7 +65,7 @@ def CNOT_Circuit(w,c,t):
 			j = i+1
 			circ_mat[i][j] = 1
 			circ_mat[j][i] = 1
-		print circ_mat
+#		print circ_mat
 ##Place the identities b/t target and control
 		for a in range(2**(t-1)):
 			for b in range(2**(c-t-1)):
@@ -72,24 +73,24 @@ def CNOT_Circuit(w,c,t):
 				j = 2**(c-t-1)*(1+2*a) + b
 				circ_mat2[i][j] = 1
 				circ_mat2[j][i] = 1
-		print circ_mat2
-		print '\n'
+#		print circ_mat2
+#		print '\n'
 ##Place the One
 		for a in range(2**(t-1)):
 			for b in range(2**(c-t-1)):
 				for d in range(c-t):
 					i = 2*(2**(c-t-1)*2*a + b) + 1
 					j = 2*(2**(c-t-1)*(1+2*a) + b) + 1 
-					print a
-					print b
+#					print a
+#					print b
 #					print c
-					print i
-					print j
-					print '\n'
+#					print i
+#					print j
+#					print '\n'
 					circ_mat3[i][j] = 1
 					circ_mat3[j][i] = 1
-		print '\n'	
-		print circ_mat3
+#		print '\n'	
+#		print circ_mat3
 ##Place the remaining Identities
 		for a in range(2**(t-1)):
 			for b in range(2**(c-t-1)):
@@ -98,20 +99,20 @@ def CNOT_Circuit(w,c,t):
 					j = 2**(w-c)*(2*(2**(c-t-1)*(1+2*a) + b) + 1) + e 
 					circ_mat4[i][j] = 1
 					circ_mat4[j][i] = 1
-		return circ_mat4
+		return np.matrix(circ_mat4)
 ##Handling the case where control is a 0
 		for a in range(2**(t)):
 			i = 2*a
-			print a
-			print i
+#			print a
+#			print i
 			circ_mat0[i][i] = 1
 ##		print circ_mat
 		for a in range(2**(t)):
 			for b in range(2**(w-c)):
 				i = (2**(w-c))*(2*a) + b
 				circ_mat02[i][i] = 1
-		return circ_mat02
-		print w1.adding_arrays(w, circ_mat4, circ_mat02)	
+#		return circ_mat02
+		return np.matrix(w1.adding_arrays(w, circ_mat4, circ_mat02))	
 
 #w=2
 #c=1

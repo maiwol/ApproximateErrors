@@ -21,7 +21,7 @@ def adding_arrays(w, circ1, circ2):
 	for a in range(2**w):
 		for b in range(2**w):
 			circ[a][b] = circ1[a][b] + circ2[a][b]
-	print circ
+	return circ
 
 
 w=2
