@@ -17,7 +17,8 @@ class Efficient_State_and_Operations(object):
 	
 	def __init__(self, circuit, number_qubits,
 	             initial_state=None, desired_outcomes = [None],
-		     precompiled_gates=False, precompiled_errors=False):
+		         precompiled_gates=False, precompiled_errors=False,
+		         output_folder='.'):
 		print number_qubits
 		classified_gates = self.classify_gates(circuit.gates)
 		self.prep_gates, self.oper_gates, self.meas_gates = classified_gates 
@@ -27,12 +28,59 @@ class Efficient_State_and_Operations(object):
 		self.number_data_qubits = self.number_qubits - self.number_ancilla_qubits
 		self.rot_errors = None
 		self.sym = False
+		self.output_folder = output_folder
+
 		if precompiled_gates == False:
-			pass
-			# compile every gate and save it on hard drive
+			for gate in self.oper_gates:
+				print 'Precompiling gate %s' %gate.gate_name
+				if len(gate.qubits) > 1:
+					if gate.qubits[0].qubit_type == 'ancilla':
+						Control_ID = 1  + self.number_data_qubits + gate.qubits[0].qubit_id
+					else:
+						Control_ID = 1 + gate.qubits[0].qubit_id
+					if gate.qubits[1].qubit_type == 'ancilla':
+						Target_ID = 1  + self.number_data_qubits + gate.qubits[1].qubit_id
+					else:
+						Target_ID = 1 + gate.qubits[1].qubit_id
+		            
+               
+					output_filename = '_'.join([gate.gate_name, str(Control_ID-1), str(Target_ID-1)]) + '.npy'
+                  
+                    
+					if gate.gate_name == 'CX':
+						trans_gate = np.matrix(CNOT.CNOT_Circuit(self.number_qubits, Control_ID, Target_ID))
+					elif gate.gate_name == 'CZ':
+						trans_gate = np.matrix(CZ.CZ_Circuit(number_qubits,Control_ID, Target_ID))
+					else:
+						raise NameError('We havent implemented that gate yet.')    
+                    
+                    
+				else:
+					if gate.qubits[0].data_type == 'ancilla':
+						Qubit_ID = 1  + self.number_data_qubits + gate.qubits[0].qubit_id
+					else:
+						Qubit_ID = 1 + gate.qubits[0].qubit_id
+		                
+					output_filename = '_'.join([gate.gate_name, str(Qubit_ID-1)]) + '.npy'
+		            
+		                
+					if gate.gate_name == 'X':
+						trans_gate = np.matrix(X.X_Circuit(self.number_qubits, Qubit_ID))
+					elif gate.gate_name == 'H':	
+						trans_gate = np.matrix(H.Hada_Circuit(self.number_qubits, Qubit_ID))
+					elif gate.gate_name == 'Z':
+						trans_gate = np.matrix(Z.Z_Circuit(self.number_qubits, Qubit_ID))
+					else:
+						pass	
+				
+				output_filename = output_folder + output_filename
+				np.save(output_filename, trans_gate)
+                    
+
+		# compile every error and save it on hard drive
 		if precompiled_errors == False:
 			pass
-			# compile every error and save it on hard drive
+		# compile every error and save it on hard drive
 
 		# This next "if" allows us to postpone the specification of 
 		# an initial state until later on.  This is used to reduce 
@@ -527,7 +575,13 @@ class Efficient_State_and_Operations(object):
 	def apply_all_operations(self):
 		for gate in self.oper_gates:
 			print 'Translating gate %s ...' %gate.gate_name
-			current_oper = self.translate_gate(gate)
+##			current_oper = self.translate_gate(gate)
+			if gate.gate_name in ['CX', 'CZ']:
+				current_oper = np.load(self.output_folder + str(gate.gate_name) + '_' + str(gate.qubits[0].qubit_id) + '_' + str(gate.qubits[1].qubit_id))
+			elif gate.gate_name in ['H','X','Z']:
+				current_oper = np.load(self.output_folder + str(gate.gate_name) + '_' + str(gate.qubits[0].qubit_id))
+			else:
+				current_oper = self.translate_gate(gate)
 			print 'Done translating'
 			print 'About to start applying operation ...'
 			self.current_state.density_matrix = self.apply_single_operation(
