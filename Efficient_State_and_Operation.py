@@ -8,6 +8,7 @@ import CZ_Circuit as CZ
 import functions as fun
 import Simulation_real_circuits as sim
 import sympy as sp
+import os
 
 
 class Efficient_State_and_Operations(object):
@@ -18,7 +19,7 @@ class Efficient_State_and_Operations(object):
 	def __init__(self, circuit, number_qubits,
 	             initial_state=None, desired_outcomes = [None],
 		         precompiled_gates=False, precompiled_errors=False,
-		         output_folder='.'):
+		         output_folder='./Steane/Steane/Precompiled_Gates/', output_error_folder='./Steane/Steane/Precompiled_Errors/'):
 		print number_qubits
 		classified_gates = self.classify_gates(circuit.gates)
 		self.prep_gates, self.oper_gates, self.meas_gates = classified_gates 
@@ -29,6 +30,7 @@ class Efficient_State_and_Operations(object):
 		self.rot_errors = None
 		self.sym = False
 		self.output_folder = output_folder
+		self.output_error_folder = output_error_folder		
 
 		if precompiled_gates == False:
 			for gate in self.oper_gates:
@@ -44,7 +46,6 @@ class Efficient_State_and_Operations(object):
 						Target_ID = 1 + gate.qubits[1].qubit_id
 		            
                
-					output_filename = '_'.join([gate.gate_name, str(Control_ID-1), str(Target_ID-1)]) + '.npy'
                   
                     
 					if gate.gate_name == 'CX':
@@ -52,17 +53,23 @@ class Efficient_State_and_Operations(object):
 					elif gate.gate_name == 'CZ':
 						trans_gate = np.matrix(CZ.CZ_Circuit(number_qubits,Control_ID, Target_ID))
 					else:
-						raise NameError('We havent implemented that gate yet.')    
+						trans_gate = self.translate_gate(gate)
+						output_filename2 = output_error_folder +  '_'.join([gate.gate_name, str(Qubit_ID-1)]) + '.npy'
+                                      
+					if gate.gate_name == 'AD 0.1':
+						output_filename = output_filename2
+					else:
+						output_filename = output_folder +  '_'.join([gate.gate_name, str(Control_ID-1), str(Target_ID-1)]) + '.npy'
+
+						###raise NameError('We havent implemented that gate yet.')    
                     
                     
 				else:
-					if gate.qubits[0].data_type == 'ancilla':
+					if gate.qubits[0].qubit_type == 'ancilla':
 						Qubit_ID = 1  + self.number_data_qubits + gate.qubits[0].qubit_id
 					else:
 						Qubit_ID = 1 + gate.qubits[0].qubit_id
-		                
-					output_filename = '_'.join([gate.gate_name, str(Qubit_ID-1)]) + '.npy'
-		            
+
 		                
 					if gate.gate_name == 'X':
 						trans_gate = np.matrix(X.X_Circuit(self.number_qubits, Qubit_ID))
@@ -71,9 +78,14 @@ class Efficient_State_and_Operations(object):
 					elif gate.gate_name == 'Z':
 						trans_gate = np.matrix(Z.Z_Circuit(self.number_qubits, Qubit_ID))
 					else:
-						pass	
-				
-				output_filename = output_folder + output_filename
+						trans_gate = self.translate_gate(gate)
+						output_filename2 = output_error_folder +  '_'.join([gate.gate_name, str(Qubit_ID-1)]) + '.npy'
+					if gate.gate_name == 'AD 0.1':
+                                               output_filename = output_filename2
+                                        else:
+                                             output_filename = output_folder +  '_'.join([gate.gate_name, str(Control_ID-1), str(Target_ID-1)]) + '.npy'
+				if not os.path.exists(output_folder):
+					os.makedirs(output_folder)
 				np.save(output_filename, trans_gate)
                     
 
@@ -117,7 +129,7 @@ class Efficient_State_and_Operations(object):
 		"""
 		
 		if gate.qubits[0].qubit_type == 'ancilla':
-			Qubit_ID = 1 + number_data_qubits + gate.qubits[0].qubit_id
+			Qubit_ID = 1 + self.number_data_qubits + gate.qubits[0].qubit_id
 		else:
 			Qubit_ID = 1 + gate.qubits[0].qubit_id
 		
@@ -143,11 +155,11 @@ class Efficient_State_and_Operations(object):
 									control, target))
 			elif gate.gate_name == 'CZ':
 				if gates.qubits[0].qubit_type == 'ancilla':
-					control = 1 + number_data_qubits + gate.qubits[0].qubit_id
+					control = 1 + self.number_data_qubits + gate.qubits[0].qubit_id
 					target = 1 + gate.qubits[1].qubit_id
 				else:
 					control = 1 + gate.qubits[0].qubit_id
-					target = 1 + number_data_qubits + gate.qubits[1].qubit_id
+					target = 1 + self.number_data_qubits + gate.qubits[1].qubit_id
 				
 				current_gate = np.matrix(CZ.CZ_Circuit(number_qubits,
 									control, target))			
@@ -574,16 +586,18 @@ class Efficient_State_and_Operations(object):
 
 	def apply_all_operations(self):
 		for gate in self.oper_gates:
-			print 'Translating gate %s ...' %gate.gate_name
+##			print 'Translating gate %s ...' %gate.gate_name
 ##			current_oper = self.translate_gate(gate)
 			if gate.gate_name in ['CX', 'CZ']:
-				current_oper = np.load(self.output_folder + str(gate.gate_name) + '_' + str(gate.qubits[0].qubit_id) + '_' + str(gate.qubits[1].qubit_id))
+				current_oper = np.matrix(np.load(self.output_folder + str(gate.gate_name) + '_' + str(gate.qubits[0].qubit_id) + '_' + str(gate.qubits[1].qubit_id) + '.npy'))
 			elif gate.gate_name in ['H','X','Z']:
-				current_oper = np.load(self.output_folder + str(gate.gate_name) + '_' + str(gate.qubits[0].qubit_id))
+				current_oper = np.matrix(np.load(self.output_folder + str(gate.gate_name) + '_' + str(gate.qubits[0].qubit_id) + '.npy'))
 			else:
-				current_oper = self.translate_gate(gate)
+				current_op = np.load(self.output_error_folder + str(gate.gate_name) + '_' + str(gate.qubits[0].qubit_id) + '.npy')
+				current_oper = np.matrix(current_op[0])
 			print 'Done translating'
-			print 'About to start applying operation ...'
+			print 'About to start applying operation %s' %gate.gate_name 
+			print '_%s' %gate.qubits[0].qubit_id 
 			self.current_state.density_matrix = self.apply_single_operation(
                                                 self.current_state.density_matrix,
                                                 current_oper)
@@ -598,4 +612,194 @@ class Efficient_State_and_Operations(object):
 #zero_zero = np.matrix([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,1]]) 
 #print zero_zero
 #CX_Circ = Efficient_State_and_Operations(circ1, 2)
+
+        def prep_measurements(self, meas_gates):
+                """
+                """
+                measurements = []
+                for gate in meas_gates:
+                        if gate.qubits[0].qubit_type == 'ancilla':
+                                qubit = gate.qubits[0].qubit_id + self.number_data_qubits
+                        else:
+                                qubit = gate.qubits[0].qubit_id
+			measurements += [[fun.gate_matrix_dic[gate.gate_name], qubit]]
+
+                return measurements
+
+        def do_single_measurement(self, meas_operators, qubit, desired_outcome=['0','1']):
+                """
+                """
+                qubits = self.number_qubits
+                new_dic = {}
+                for entry in self.current_state.density_matrix:
+                        outcomes = self.apply_projection(meas_operators, qubit, qubits,
+                                                       self.current_state.density_matrix[entry],
+                                                       desired_outcome)
+                        for key in outcomes:
+                                new_key = entry + key
+                                new_dic[new_key] = outcomes[key]
+
+                self.current_state.density_matrix = new_dic
+                self.current_state.qubits.remove(qubit)
+
+                return None
+
+        def do_all_measurements(self):
+                """
+                """
+                #qubit_outcome_dic = {}
+                if len(self.desired_outcomes) != len(self.measurements):
+                        raise ValueError("The number of desired outcomes is NOT " \
+                                         "the same as the number of measurements " \
+                                          "in this circuit.")
+
+                # At this point self.current_state.density_matrix is still in fact
+                # a density matrix.  The first we do is turn it into a dictionary
+                # of the form {'' : density matrix}
+
+                self.current_state.density_matrix = {'' : self.current_state.density_matrix}
+
+                for i in range(len(self.measurements)):
+                        self.do_single_measurement(self.measurements[i][0],
+                                                   self.measurements[i][1],
+                                                   self.desired_outcomes[i])
+
+                self.stage += 1
+
+                return None
+                #return qubit_outcome_dic
+
+        def apply_projection(self, meas_operators, qubit, n_qubits, dens,
+                             desired_outcome=['0','1']):
+                """
+                Notice that the output is a dictionary whose keys are the desired outcome
+                and whose values are the UNNORMALIZED resulting density matrix. The
+                probability of having obtained that measurement is just given by the trace
+                of such density matrix.
+                """
+                if n_qubits == 1:
+                        M0 = meas_operators[0]
+                        M1 = meas_operators[1]
+                else:
+                        if self.sym:
+                                meas_list0 = [fun.gate_matrix_dic_sym['I'] for i in range(n_qubits)]
+                                meas_list1 = [fun.gate_matrix_dic_sym['I'] for i in range(n_qubits)]
+                        else:
+                                meas_list0 = [fun.gate_matrix_dic['I'] for i in range(n_qubits)]
+                                meas_list1 = [fun.gate_matrix_dic['I'] for i in range(n_qubits)]
+
+                        meas_list0[qubit] = meas_operators[0]
+                        meas_list1[qubit] = meas_operators[1]
+
+                        M0 = fun.tensor_product(meas_list0, self.sym)
+                        M1 = fun.tensor_product(meas_list1, self.sym)
+
+                if self.sym:
+                        x = sp.simplify(((quant.Dagger(M0))*(M0*dens)).trace())
+                else:
+                        x = round(abs(np.trace((M0.H)*(M0*dens))), 20)
+
+                ###################################################################### 
+                #  The None option was just copied from the do_single_measurement    #
+                #  Need to check it later on to make sure it makes sense.  However,  #
+                #  we won't use it for the FT EC, so it's OK for now.  Mau 11/14/13  #
+                ######################################################################
+                if desired_outcome == None:
+                        if x == 0.:
+                                dens = (M1)*(dens*M1.H)
+                                meas_outcome = 1
+                                prob = 1.
+                                #random = False
+                        elif x == 1.:
+                                dens = (M0)*(dens*M0.H)
+                                meas_outcome = 0
+                                prob = 1.
+                                #random = False
+                        else:
+                                r = rd.random()
+                                if r < x:
+                                        #dens = (1./x)*(M0)*(dens*M0.H)
+                                        dens = (M0*dens)*(M0.H)
+                                        meas_outcome = 0
+                                        prob = x
+                                else:
+                                        #dens = (1./(1-x))*(M1)*(dens*M1.H)             
+                                        dens = (M1*dens)*(M1.H)
+                                        meas_outcome = 1
+                                        prob = 1-x
+                                #random = True
+
+                else:
+
+                        if len(desired_outcome) == 2:  # ['0', '1']
+                                if self.sym:
+                                        dens0 = (M0*dens)*(quant.Dagger(M0))
+                                        dens1 = (M1*dens)*(quant.Dagger(M1))
+                                else:
+                                        dens0 = (M0*dens)*(M0.H)
+                                        dens1 = (M1*dens)*(M1.H)
+
+                                return {'0' : dens0, '1' : dens1}
+
+
+                        elif desired_outcome == ['0']:
+                                if self.sym:
+                                        if x == 0 or x == 0.:
+                                                #raise ValueError("This outcome is impossible")
+                                                #print "This outcome is impossible. This is not an er$
+                                                #       just be aware that the outcome you desired wi$
+                                                #       never happen."
+                                                dens = 0.*dens
+                                        else:
+                                                #dens = (1./x)*(M0*dens)*(quant.Dagger(M0))
+                                                dens = (M0*dens)*(quant.Dagger(M0))
+
+                                else:
+                                        if x == 0.:
+                                                #raise ValueError("This outcome is impossible.")
+                                                #print "This outcome is impossible. This is not an er$
+                                                #       just be aware that the outcome you desired wi$ 
+                                                #       never happen."
+                                                dens = 0.*dens
+                                        else:
+                                                #dens = (1./x)*(M0)*(dens*M0.H)
+                                                dens = (M0*dens)*(M0.H)
+
+                                return {'0' : dens}
+
+
+                        elif desired_outcome == ['1']:
+                                if self.sym:
+                                        if x == 1 or x == 1.:
+                                                #raise ValueError("This outcome is impossible")
+                                                #print "This outcome is impossible. This is not an e$
+                                                #       just be aware that the outcome you desired w$
+                                                #       never happen."
+                                                dens = 0.*dens
+                                        else:
+                                                #dens = (1./(1.-x))*(M1*dens)*(quant.Dagger(M1))
+                                                dens = (M1*dens)*(quant.Dagger(M1))
+
+                                else:
+                                        if x == 1.:
+                                                #raise ValueError("This outcome is impossible.")
+                                                #print "This outcome is impossible. This is not an e$
+                                                #       just be aware that the outcome you desired w$
+                                                #       never happen."
+                                                dens = 0.*dens
+                                        else:
+                                                #dens = (1./(1-x))*(M1)*(dens*M1.H)
+                                                dens = (M1*dens)*(M1.H)
+
+                                return {'1' : dens}
+
+
+
+
+########################################################################################
+#                                                                                      #        
+#       Still need to implement the symbolic part when desired_outcomes is None        #
+#                                                                                      #        
+########################################################################################
+
 
